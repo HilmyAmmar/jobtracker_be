@@ -6,19 +6,19 @@ from .serializers import JobSerializer
 
 # Create your views here.
 class JobView(APIView):
-    def get(self, request):
-        jobs = Job.objects.all()
-        jobs_serializer = JobSerializer(jobs, many=True)
-        return Response(jobs_serializer.data)
-    
-    def get_id(self, request, job_id):
-        try:
-            job = Job.objects.get(id=job_id)
-            job_serializer = JobSerializer(job)
-            return Response(job_serializer.data)
-        except Job.DoesNotExist:
-            return Response({"error": "Job not found"}, status=404)
-        
+    def get(self, request, id=None):
+        if id is not None:
+            try:
+                job = Job.objects.get(id=id)
+                job_serializer = JobSerializer(job)
+                return Response(job_serializer.data)
+            except Job.DoesNotExist:
+                return Response({"error": "Job not found"}, status=404)
+        else:
+            jobs = Job.objects.all()
+            jobs_serializer = JobSerializer(jobs, many=True)
+            return Response(jobs_serializer.data)
+
     def post(self, request):
         job_serializer = JobSerializer(data=request.data)
         if job_serializer.is_valid():
@@ -26,10 +26,10 @@ class JobView(APIView):
             return Response(job_serializer.data, status=201)
         return Response(job_serializer.errors, status=400)
     
-    def put(self, request, job_id):
+    def put(self, request, id):
         try:
-            job = Job.objects.get(id=job_id)
-            job_serializer = JobSerializer(job, data=request.data, partial=True)
+            job = Job.objects.get(id=id)
+            job_serializer = JobSerializer(job, data=request.data, partial=False)
             if job_serializer.is_valid():
                 job_serializer.save()
                 return Response(job_serializer.data)
@@ -37,9 +37,9 @@ class JobView(APIView):
         except Job.DoesNotExist:
             return Response({"error": "Job not found"}, status=404)
         
-    def patch(self, request, job_id):
+    def patch(self, request, id):
         try:
-            job = Job.objects.get(id=job_id)
+            job = Job.objects.get(id=id)
             job_serializer = JobSerializer(job, data=request.data, partial=True)
             if job_serializer.is_valid():
                 job_serializer.save()
@@ -49,9 +49,9 @@ class JobView(APIView):
             return Response({"error": "Job not found"}, status=404)
 
         
-    def delete(self, request, job_id):
+    def delete(self, request, id):
         try:
-            job = Job.objects.get(id=job_id)
+            job = Job.objects.get(id=id)
             job.delete()
             return Response({"message": "Job deleted successfully"}, status=204)
         except Job.DoesNotExist:
